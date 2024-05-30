@@ -9,9 +9,7 @@ from typing import List, Tuple
 import os
 import mysql.connector
 
-
-def filter_datum(fields: List[str], redaction: str,
-                 message: str, separator: str) -> str:
+def filter_datum(fields: List[str], redaction: str, message: str, separator: str) -> str:
     """
     Obfuscates specified fields in a log message.
 
@@ -33,8 +31,7 @@ class RedactingFormatter(logging.Formatter):
     Redacting Formatter class
     """
     REDACTION = "***"
-    FORMAT = ("[HOLBERTON] %(name)s %(levelname)s"
-              " %(asctime)-15s: %(message)s")
+    FORMAT = "[HOLBERTON] %(name)s %(levelname)s %(asctime)-15s: %(message)s"
     SEPARATOR = ";"
 
     def __init__(self, fields: List[str]):
@@ -51,12 +48,10 @@ class RedactingFormatter(logging.Formatter):
         Returns:
             str: Formatted log record.
         """
-        return filter_datum(self.fields, self.REDACTION,
-                            super().format(record), self.SEPARATOR)
+        return filter_datum(self.fields, self.REDACTION, super().format(record), self.SEPARATOR)
 
 
 PII_FIELDS = ("name", "email", "phone", "ssn", "password")
-
 
 def get_logger() -> logging.Logger:
     """
@@ -86,3 +81,25 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
     host = os.getenv('PERSONAL_DATA_DB_HOST', 'localhost')
     database = os.getenv('PERSONAL_DATA_DB_NAME')
     return mysql.connector.connect(user=user, password=password, host=host, database=database)
+
+
+def main():
+    """
+    Connects to the database, retrieves all rows in the users table,
+    and logs each row with sensitive fields obfuscated.
+    """
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users;")
+    logger = get_logger()
+
+    for row in cursor:
+        message = "; ".join(f"{key}={value}" for key, value in row.items())
+        logger.info(message)
+
+    cursor.close()
+    db.close()
+
+
+if __name__ == "__main__":
+    main()
