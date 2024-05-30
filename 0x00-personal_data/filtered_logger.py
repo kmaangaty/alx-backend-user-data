@@ -9,7 +9,9 @@ from typing import List, Tuple
 import os
 import mysql.connector
 
-def filter_datum(fields: List[str], redaction: str, message: str, separator: str) -> str:
+
+def filter_datum(fields: List[str], redaction: str,
+                 message: str, separator: str) -> str:
     """
     Obfuscates specified fields in a log message.
 
@@ -31,7 +33,8 @@ class RedactingFormatter(logging.Formatter):
     Redacting Formatter class
     """
     REDACTION = "***"
-    FORMAT = "[HOLBERTON] %(name)s %(levelname)s %(asctime)-15s: %(message)s"
+    FORMAT = ("[HOLBERTON] %(name)s %(levelname)s"
+              " %(asctime)-15s: %(message)s")
     SEPARATOR = ";"
 
     def __init__(self, fields: List[str]):
@@ -48,10 +51,12 @@ class RedactingFormatter(logging.Formatter):
         Returns:
             str: Formatted log record.
         """
-        return filter_datum(self.fields, self.REDACTION, super().format(record), self.SEPARATOR)
+        return filter_datum(self.fields, self.REDACTION,
+                            super().format(record), self.SEPARATOR)
 
 
 PII_FIELDS = ("name", "email", "phone", "ssn", "password")
+
 
 def get_logger() -> logging.Logger:
     """
