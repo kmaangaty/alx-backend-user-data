@@ -25,7 +25,8 @@ def filter_datum(fields: List[str], redaction: str,
         fields (List[str]): List of field names to obfuscate.
         redaction (str): String to replace the field values with.
         message (str): The log message to obfuscate.
-        separator (str): The character that separates fields in the log message.
+        separator (str): The character that
+         separates fields in the log message.
 
     Returns:
         str: The obfuscated log message.
@@ -92,7 +93,8 @@ def get_logger() -> logging.Logger:
 
 def get_db() -> mysql.connector.connection.MySQLConnection:
     """
-    Establish and return a connection to the MySQL database using environment variables.
+    Establish and return a connection to the
+     MySQL database using environment variables.
 
     Returns:
         mysql.connector.connection.MySQLConnection: Database connection object.
@@ -111,7 +113,9 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
 
 def main():
     """
-    Main entry point for the script. Fetches user data from the database and logs it with PII obfuscation.
+    Main entry point for the script.
+    Fetches user data from the database
+     and logs it with PII obfuscation.
     """
     db_connection = get_db()
     logger = get_logger()
@@ -120,7 +124,8 @@ def main():
     column_names = cursor.column_names
 
     for row in cursor:
-        log_message = "".join(f"{column}={value}; " for column, value in zip(column_names, row))
+        log_message = "".join(f"{column}={value}; "
+                              for column, value in zip(column_names, row))
         logger.info(log_message.strip())
 
     cursor.close()
