@@ -7,7 +7,6 @@ from os import path
 from datetime import datetime
 from typing import TypeVar, List, Iterable
 
-
 TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
 DATA = {}
 
@@ -26,12 +25,12 @@ class Base():
         self.id = kwargs.get('id', str(uuid.uuid4()))
         if kwargs.get('created_at') is not None:
             self.created_at = datetime.strptime(kwargs.get('created_at'),
-                                                 TIMESTAMP_FORMAT)
+                                                TIMESTAMP_FORMAT)
         else:
             self.created_at = datetime.utcnow()
         if kwargs.get('updated_at') is not None:
             self.updated_at = datetime.strptime(kwargs.get('updated_at'),
-                                                 TIMESTAMP_FORMAT)
+                                                TIMESTAMP_FORMAT)
         else:
             self.updated_at = datetime.utcnow()
 
@@ -126,6 +125,7 @@ class Base():
         """Search all objects with matching attributes.
         """
         class_name = cls.__name__
+
         def _search(obj):
             if len(attributes) == 0:
                 return True

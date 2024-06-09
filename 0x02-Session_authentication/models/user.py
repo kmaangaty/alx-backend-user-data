@@ -54,7 +54,8 @@ class User(Base):
             return False
         if self.password is None:
             return False
-        return hashlib.sha256(pwd.encode()).hexdigest().lower() == self.password
+        return hashlib.sha256(
+            pwd.encode()).hexdigest().lower() == self.password
 
     def display_name(self) -> str:
         """Display the user's name.

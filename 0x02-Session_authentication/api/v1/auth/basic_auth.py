@@ -89,7 +89,15 @@ class BasicAuth(Auth):
             TypeVar('User'): The authenticated user object, if present.
         """
         auth_header = self.authorization_header(request)
-        base64_auth_token = self.extract_base64_authorization_header(auth_header)
-        decoded_auth_token = self.decode_base64_authorization_header(base64_auth_token)
-        user_email, user_password = self.extract_user_credentials(decoded_auth_token)
-        return self.user_object_from_credentials(user_email, user_password)
+        base64_auth_token = self.extract_base64_authorization_header(
+            auth_header
+        )
+        decoded_auth_token = self.decode_base64_authorization_header(
+            base64_auth_token
+        )
+        user_email, user_password = self.extract_user_credentials(
+            decoded_auth_token
+        )
+        return self.user_object_from_credentials(
+            user_email, user_password
+        )

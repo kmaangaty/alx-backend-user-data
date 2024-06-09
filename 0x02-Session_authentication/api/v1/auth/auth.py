@@ -6,6 +6,7 @@ import re
 from typing import List, TypeVar
 from flask import request
 
+
 class Auth:
     """Authentication class.
     """
@@ -14,7 +15,8 @@ class Auth:
 
         Args:
             path (str): The path to check for authentication requirement.
-            excluded_paths (List[str]): List of paths that do not require authentication.
+            excluded_paths (List[str]):
+             List of paths that do not require authentication.
 
         Returns:
             bool: True if authentication is required, False otherwise.

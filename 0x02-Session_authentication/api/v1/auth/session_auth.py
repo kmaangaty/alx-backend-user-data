@@ -12,7 +12,8 @@ class SessionAuth(Auth):
     """Session authentication class.
 
     Attributes:
-        user_id_by_session_id (dict): A dictionary mapping session IDs to user IDs.
+        user_id_by_session_id (dict):
+        A dictionary mapping session IDs to user IDs.
     """
 
     user_id_by_session_id = {}
@@ -63,7 +64,8 @@ class SessionAuth(Auth):
             request: The request object.
 
         Returns:
-            bool: True if the session was successfully destroyed, False otherwise.
+            bool: True if the session was successfully
+             destroyed, False otherwise.
         """
         if request is None:
             return False

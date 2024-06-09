@@ -64,7 +64,8 @@ class SessionDBAuth(SessionExpAuth):
             request: The request object.
 
         Returns:
-            bool: True if the session was successfully destroyed, False otherwise.
+            bool: True if the session was successfully destroyed,
+             False otherwise.
         """
         session_id = self.session_cookie(request)
         try:
