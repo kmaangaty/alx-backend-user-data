@@ -70,7 +70,8 @@ def before_request_handler() -> str:
     Before request handler for validating requests
 
     Returns:
-        str: JSON response with the appropriate error status code if validation fails
+        str: JSON response with the appropriate error
+         status code if validation fails
     """
     if auth is None:
         return
