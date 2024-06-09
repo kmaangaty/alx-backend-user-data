@@ -8,42 +8,68 @@ from typing import List, TypeVar
 class Auth:
     """ Class to manage the API authentication """
 
-    def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
-        """ Method for validating if endpoint requires auth """
-        if path is None or excluded_paths is None or excluded_paths == []:
+    def require_auth(self, request_path: str, excluded_paths: List[str]) -> bool:
+        """
+        Method to validate if the endpoint requires authentication.
+
+        Args:
+            request_path (str): The path of the request.
+            excluded_paths (List[str]): A list of paths that do not require authentication.
+
+        Returns:
+            bool: True if authentication is required, False otherwise.
+        """
+        if request_path is None or excluded_paths is None or not excluded_paths:
             return True
 
-        l_path = len(path)
-        if l_path == 0:
+        request_path_length = len(request_path)
+        if request_path_length == 0:
             return True
 
-        slash_path = True if path[l_path - 1] == '/' else False
+        is_slash_terminated = request_path[-1] == '/'
 
-        tmp_path = path
-        if not slash_path:
-            tmp_path += '/'
+        normalized_path = request_path
+        if not is_slash_terminated:
+            normalized_path += '/'
 
-        for exc in excluded_paths:
-            l_exc = len(exc)
-            if l_exc == 0:
+        for excluded_path in excluded_paths:
+            excluded_path_length = len(excluded_path)
+            if excluded_path_length == 0:
                 continue
 
-            if exc[l_exc - 1] != '*':
-                if tmp_path == exc:
+            if excluded_path[-1] != '*':
+                if normalized_path == excluded_path:
                     return False
             else:
-                if exc[:-1] == path[:l_exc - 1]:
+                if excluded_path[:-1] == request_path[:excluded_path_length - 1]:
                     return False
 
         return True
 
-    def authorization_header(self, request=None) -> str:
-        """ Method that handles authorization header """
-        if request is None:
+    def authorization_header(self, req=None) -> str:
+        """
+        Method that handles authorization header extraction.
+
+        Args:
+            req (flask.Request, optional): The request object. Defaults to None.
+
+        Returns:
+            str: The value of the Authorization header if present, None otherwise.
+        """
+        if req is None:
             return None
 
-        return request.headers.get("Authorization", None)
+        return req.headers.get("Authorization", None)
 
-    def current_user(self, request=None) -> TypeVar('User'):
-        """ Validates current user """
+
+    def current_user(self, req=None) -> TypeVar('User'):
+        """
+        Method to validate the current user.
+
+        Args:
+            req (flask.Request, optional): The request object. Defaults to None.
+
+        Returns:
+            TypeVar('User'): The user object if validation is successful, None otherwise.
+        """
         return None
