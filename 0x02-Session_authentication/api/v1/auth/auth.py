@@ -3,82 +3,63 @@
 """
 from flask import request
 from typing import List, TypeVar
+from os import getenv
 
 
 class Auth:
     """ Class to manage the API authentication """
 
-    def require_auth(self, request_path: str,
-                     excluded_paths: List[str]) -> bool:
-        """
-        Method to validate if the endpoint requires authentication.
-
-        Args:
-            request_path (str): The path of the request.
-            excluded_paths (List[str]): A list of
-             paths that do not require authentication.
-
-        Returns:
-            bool: True if authentication is required,
-             False otherwise.
-        """
-        if (request_path is None or excluded_paths
-                is None or not excluded_paths):
+    def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
+        """ Method for validating if endpoint requires auth """
+        if path is None or excluded_paths is None or excluded_paths == []:
             return True
 
-        request_path_length = len(request_path)
-        if request_path_length == 0:
+        l_path = len(path)
+        if l_path == 0:
             return True
 
-        is_slash_terminated = request_path[-1] == '/'
+        slash_path = True if path[l_path - 1] == '/' else False
 
-        normalized_path = request_path
-        if not is_slash_terminated:
-            normalized_path += '/'
+        tmp_path = path
+        if not slash_path:
+            tmp_path += '/'
 
-        for excluded_path in excluded_paths:
-            excluded_path_length = len(excluded_path)
-            if excluded_path_length == 0:
+        for exc in excluded_paths:
+            l_exc = len(exc)
+            if l_exc == 0:
                 continue
 
-            if excluded_path[-1] != '*':
-                if normalized_path == excluded_path:
+            if exc[l_exc - 1] != '*':
+                if tmp_path == exc:
                     return False
             else:
-                if excluded_path[:-1] == request_path[
-                                         :excluded_path_length - 1
-                                         ]:
+                if exc[:-1] == path[:l_exc - 1]:
                     return False
 
         return True
 
-    def authorization_header(self, req=None) -> str:
-        """
-        Method that handles authorization header extraction.
-
-        Args:
-            req (flask.Request, optional): The
-            request object. Defaults to None.
-
-        Returns:
-            str: The value of the Authorization
-             header if present, None otherwise.
-        """
-        if req is None:
+    def authorization_header(self, request=None) -> str:
+        """ Method that handles authorization header """
+        if request is None:
             return None
 
-        return req.headers.get("Authorization", None)
+        return request.headers.get("Authorization", None)
 
-    def current_user(self, req=None) -> TypeVar('User'):
-        """
-        Method to validate the current user.
-
-        Args:
-            req (flask.Request, optional):
-             The request object. Defaults to None.
-
-        Returns:
-            TypeVar('User'): The user object if validation
-            is successful, None otherwise.
-        """
+    def current_user(self, request=None) -> TypeVar('User'):
+        """ Validates current user """
         return None
+
+    def session_cookie(self, request=None):
+        """Returns a cookie value from a request"""
+
+        if request is None:
+            return None
+
+        SESSION_NAME = getenv("SESSION_NAME")
+
+        if SESSION_NAME is None:
+            return None
+
+        session_id = request.cookies.get(SESSION_NAME)
+
+        return session_id
