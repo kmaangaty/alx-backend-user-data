@@ -10,15 +10,19 @@ from typing import TypeVar
 class BasicAuth(Auth):
     """ Basic Authentication Class """
 
-    def extract_base64_authorization_header(self, authorization_header: str) -> str:
+    def extract_base64_authorization_header(
+            self, authorization_header: str
+    ) -> str:
         """
         Extracts the Base64 part of the Authorization header.
 
         Args:
-            authorization_header (str): The Authorization header value.
+            authorization_header (str):
+            The Authorization header value.
 
         Returns:
-            str: The Base64 part of the Authorization header, None if invalid.
+            str: The Base64 part of the Authorization header,
+             None if invalid.
         """
         if authorization_header is None:
             return None
@@ -33,12 +37,15 @@ class BasicAuth(Auth):
 
         return encoded_part
 
-    def decode_base64_authorization_header(self, base64_authorization_header: str) -> str:
+    def decode_base64_authorization_header(
+            self, base64_authorization_header: str
+    ) -> str:
         """
         Decodes the Base64 encoded part of the Authorization header.
 
         Args:
-            base64_authorization_header (str): The Base64 encoded part of the Authorization header.
+            base64_authorization_header (str): The Base64
+             encoded part of the Authorization header.
 
         Returns:
             str: The decoded string, None if decoding fails.
@@ -57,16 +64,21 @@ class BasicAuth(Auth):
 
         return decoded_string
 
-    def extract_user_credentials(self, decoded_base64_authorization_header: str) -> (str, str):
+    def extract_user_credentials(
+            self, decoded_base64_authorization_header: str
+    ) -> (str, str):
         """
         Extracts user credentials from the Base64 decoded string.
 
         Args:
-            decoded_base64_authorization_header (str): The Base64 decoded string.
+            decoded_base64_authorization_header (str):
+             The Base64 decoded string.
 
         Returns:
-            tuple: User email and password as a tuple, (None, None) if invalid.
+            tuple: User email and password as a tuple,
+             (None, None) if invalid.
         """
+
         if decoded_base64_authorization_header is None:
             return None, None
 
@@ -80,7 +92,9 @@ class BasicAuth(Auth):
 
         return email, password
 
-    def user_object_from_credentials(self, user_email: str, user_password: str) -> TypeVar('User'):
+    def user_object_from_credentials(
+            self, user_email: str, user_password: str
+    ) -> TypeVar('User'):
         """
         Retrieves the User instance based on email and password.
 
@@ -89,7 +103,8 @@ class BasicAuth(Auth):
             user_password (str): The user's password.
 
         Returns:
-            TypeVar('User'): The User instance, None if authentication fails.
+            TypeVar('User'): The User instance,
+             None if authentication fails.
         """
         if user_email is None or not isinstance(user_email, str):
             return None
@@ -110,13 +125,16 @@ class BasicAuth(Auth):
 
     def current_user(self, req=None) -> TypeVar('User'):
         """
-        Overloads Auth and retrieves the User instance for a request.
+        Overloads Auth and retrieves
+        the User instance for a request.
 
         Args:
-            req (flask.Request, optional): The request object. Defaults to None.
+            req (flask.Request, optional):
+            The request object. Defaults to None.
 
         Returns:
-            TypeVar('User'): The User instance if authenticated, None otherwise.
+            TypeVar('User'): The User instance
+             if authenticated, None otherwise.
         """
         auth_header = self.authorization_header(req)
 
