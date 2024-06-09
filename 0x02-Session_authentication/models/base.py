@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Base module.
+"""Base module for the API.
 """
 import json
 import uuid
@@ -13,30 +13,30 @@ DATA = {}
 
 
 class Base():
-    """Base class.
+    """Base class for API models.
     """
 
     def __init__(self, *args: list, **kwargs: dict):
         """Initialize a Base instance.
         """
-        s_class = str(self.__class__.__name__)
-        if DATA.get(s_class) is None:
-            DATA[s_class] = {}
+        class_name = str(self.__class__.__name__)
+        if DATA.get(class_name) is None:
+            DATA[class_name] = {}
 
         self.id = kwargs.get('id', str(uuid.uuid4()))
         if kwargs.get('created_at') is not None:
             self.created_at = datetime.strptime(kwargs.get('created_at'),
-                                                TIMESTAMP_FORMAT)
+                                                 TIMESTAMP_FORMAT)
         else:
             self.created_at = datetime.utcnow()
         if kwargs.get('updated_at') is not None:
             self.updated_at = datetime.strptime(kwargs.get('updated_at'),
-                                                TIMESTAMP_FORMAT)
+                                                 TIMESTAMP_FORMAT)
         else:
             self.updated_at = datetime.utcnow()
 
     def __eq__(self, other: TypeVar('Base')) -> bool:
-        """Equality.
+        """Equality comparison for Base objects.
         """
         if type(self) != type(other):
             return False
@@ -45,7 +45,7 @@ class Base():
         return (self.id == other.id)
 
     def to_json(self, for_serialization: bool = False) -> dict:
-        """Convert the object a JSON dictionary.
+        """Convert the object to a JSON dictionary.
         """
         result = {}
         for key, value in self.__dict__.items():
@@ -61,56 +61,56 @@ class Base():
     def load_from_file(cls):
         """Load all objects from file.
         """
-        s_class = cls.__name__
-        file_path = ".db_{}.json".format(s_class)
-        DATA[s_class] = {}
+        class_name = cls.__name__
+        file_path = f".db_{class_name}.json"
+        DATA[class_name] = {}
         if not path.exists(file_path):
             return
 
-        with open(file_path, 'r') as f:
-            objs_json = json.load(f)
+        with open(file_path, 'r') as file:
+            objs_json = json.load(file)
             for obj_id, obj_json in objs_json.items():
-                DATA[s_class][obj_id] = cls(**obj_json)
+                DATA[class_name][obj_id] = cls(**obj_json)
 
     @classmethod
     def save_to_file(cls):
         """Save all objects to file.
         """
-        s_class = cls.__name__
-        file_path = ".db_{}.json".format(s_class)
+        class_name = cls.__name__
+        file_path = f".db_{class_name}.json"
         objs_json = {}
-        for obj_id, obj in DATA[s_class].items():
+        for obj_id, obj in DATA[class_name].items():
             objs_json[obj_id] = obj.to_json(True)
 
-        with open(file_path, 'w') as f:
-            json.dump(objs_json, f)
+        with open(file_path, 'w') as file:
+            json.dump(objs_json, file)
 
     def save(self):
-        """Save current object.
+        """Save the current object.
         """
-        s_class = self.__class__.__name__
+        class_name = self.__class__.__name__
         self.updated_at = datetime.utcnow()
-        DATA[s_class][self.id] = self
+        DATA[class_name][self.id] = self
         self.__class__.save_to_file()
 
     def remove(self):
-        """Remove object.
+        """Remove the object.
         """
-        s_class = self.__class__.__name__
-        if DATA[s_class].get(self.id) is not None:
-            del DATA[s_class][self.id]
+        class_name = self.__class__.__name__
+        if DATA[class_name].get(self.id) is not None:
+            del DATA[class_name][self.id]
             self.__class__.save_to_file()
 
     @classmethod
     def count(cls) -> int:
-        """Count all objects.
+        """Count all objects of this type.
         """
-        s_class = cls.__name__
-        return len(DATA[s_class].keys())
+        class_name = cls.__name__
+        return len(DATA[class_name].keys())
 
     @classmethod
     def all(cls) -> Iterable[TypeVar('Base')]:
-        """Return all objects.
+        """Return all objects of this type.
         """
         return cls.search()
 
@@ -118,20 +118,20 @@ class Base():
     def get(cls, id: str) -> TypeVar('Base'):
         """Return one object by ID.
         """
-        s_class = cls.__name__
-        return DATA[s_class].get(id)
+        class_name = cls.__name__
+        return DATA[class_name].get(id)
 
     @classmethod
     def search(cls, attributes: dict = {}) -> List[TypeVar('Base')]:
         """Search all objects with matching attributes.
         """
-        s_class = cls.__name__
+        class_name = cls.__name__
         def _search(obj):
             if len(attributes) == 0:
                 return True
-            for k, v in attributes.items():
-                if (getattr(obj, k) != v):
+            for key, value in attributes.items():
+                if getattr(obj, key) != value:
                     return False
             return True
 
-        return list(filter(_search, DATA[s_class].values()))
+        return list(filter(_search, DATA[class_name].values()))

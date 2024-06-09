@@ -4,7 +4,7 @@
 import os
 from os import getenv
 from flask import Flask, jsonify, abort, request
-from flask_cors import (CORS, cross_origin)
+from flask_cors import CORS
 
 from api.v1.views import app_views
 from api.v1.auth.auth import Auth
@@ -32,29 +32,29 @@ if auth_type == 'session_db_auth':
 
 
 @app.errorhandler(404)
-def not_found(error) -> str:
-    """Not found handler.
+def handle_not_found(error) -> str:
+    """Handle 404 errors.
     """
     return jsonify({"error": "Not found"}), 404
 
 
 @app.errorhandler(401)
-def unauthorized(error) -> str:
-    """Unauthorized handler.
+def handle_unauthorized(error) -> str:
+    """Handle 401 errors.
     """
     return jsonify({"error": "Unauthorized"}), 401
 
 
 @app.errorhandler(403)
-def forbidden(error) -> str:
-    """Forbidden handler.
+def handle_forbidden(error) -> str:
+    """Handle 403 errors.
     """
     return jsonify({"error": "Forbidden"}), 403
 
 
 @app.before_request
 def authenticate_user():
-    """Authenticates a user before processing a request.
+    """Authenticate user before processing a request.
     """
     if auth:
         excluded_paths = [

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""User module.
+"""User module for the API.
 """
 import hashlib
 from models.base import Base
 
 
 class User(Base):
-    """User class.
+    """User class representing users in the API.
     """
 
     def __init__(self, *args: list, **kwargs: dict):
@@ -20,34 +20,47 @@ class User(Base):
 
     @property
     def password(self) -> str:
-        """Getter of the password.
+        """Getter for the password attribute.
         """
         return self._password
 
     @password.setter
     def password(self, pwd: str):
-        """Setter of a new password: encrypt in SHA256.
+        """Setter for the password attribute.
 
-        WARNING: Use a better password hashing algorithm like argon2
-        or bcrypt in real-world projects.
+        Encrypts the password using SHA256.
+
+        Args:
+            pwd (str): The password to set.
+
+        WARNING: In real-world projects, consider using a stronger
+        password hashing algorithm like argon2 or bcrypt.
         """
-        if pwd is None or type(pwd) is not str:
+        if pwd is None or not isinstance(pwd, str):
             self._password = None
         else:
             self._password = hashlib.sha256(pwd.encode()).hexdigest().lower()
 
     def is_valid_password(self, pwd: str) -> bool:
         """Validate a password.
+
+        Args:
+            pwd (str): The password to validate.
+
+        Returns:
+            bool: True if the password is valid, False otherwise.
         """
-        if pwd is None or type(pwd) is not str:
+        if pwd is None or not isinstance(pwd, str):
             return False
         if self.password is None:
             return False
-        pwd_e = pwd.encode()
-        return hashlib.sha256(pwd_e).hexdigest().lower() == self.password
+        return hashlib.sha256(pwd.encode()).hexdigest().lower() == self.password
 
     def display_name(self) -> str:
-        """Display User name based on email/first_name/last_name.
+        """Display the user's name.
+
+        Returns:
+            str: The user's name based on email/first_name/last_name.
         """
         if self.email is None and self.first_name is None \
                 and self.last_name is None:
