@@ -28,8 +28,10 @@ def index() -> str:
 @app.route("/users", methods=["POST"], strict_slashes=False)
 def register_user() -> str:
     """
-    Register a new user with the provided email and password.
-    Returns a JSON response with the user's email and a success message,
+    Register a new user with the provided
+    email and password.
+    Returns a JSON response with the user's
+     email and a success message,
     or an error message if the email is already registered.
     """
     email = request.form.get("email")
@@ -45,8 +47,10 @@ def register_user() -> str:
 @app.route("/sessions", methods=["POST"], strict_slashes=False)
 def login() -> str:
     """
-    Log in a user if the provided credentials are correct, and create a new
-    session for them. Returns a JSON response with the user's email and a
+    Log in a user if the provided credentials
+    are correct, and create a new
+    session for them. Returns a JSON response
+    with the user's email and a
     success message, or an error if the credentials are invalid.
     """
     email = request.form.get("email")
@@ -64,8 +68,10 @@ def login() -> str:
 @app.route("/sessions", methods=["DELETE"], strict_slashes=False)
 def logout():
     """
-    Log out a logged-in user and destroy their session. Redirects to the
-    home page upon successful logout, or returns a 403 error if the session
+    Log out a logged-in user and destroy their
+     session. Redirects to the
+    home page upon successful logout, or returns
+     a 403 error if the session
     is invalid.
     """
     session_id = request.cookies.get("session_id", None)
@@ -79,8 +85,10 @@ def logout():
 @app.route("/profile", methods=["GET"], strict_slashes=False)
 def profile() -> str:
     """
-    Return a user's email based on the session_id in the received cookies.
-    Returns a JSON response with the user's email, or a 403 error if the
+    Return a user's email based on the
+     session_id in the received cookies.
+    Returns a JSON response with the user's email,
+     or a 403 error if the
     session is invalid.
     """
     session_id = request.cookies.get("session_id")
@@ -93,8 +101,10 @@ def profile() -> str:
 @app.route("/reset_password", methods=["POST"], strict_slashes=False)
 def get_reset_password_token() -> str:
     """
-    Generate a token for resetting a user's password. Returns a JSON response
-    with the user's email and reset token, or a 403 error if the email is
+    Generate a token for resetting a user's password.
+     Returns a JSON response
+    with the user's email and reset token,
+    or a 403 error if the email is
     invalid.
     """
     email = request.form.get("email")
@@ -109,8 +119,10 @@ def get_reset_password_token() -> str:
 @app.route("/reset_password", methods=["PUT"], strict_slashes=False)
 def update_password() -> str:
     """
-    Update a user's password using the provided reset token and new password.
-    Returns a JSON response with the user's email and a success message,
+    Update a user's password using the
+     provided reset token and new password.
+    Returns a JSON response with the user's
+     email and a success message,
     or a 403 error if the reset token is invalid.
     """
     email = request.form.get("email")
