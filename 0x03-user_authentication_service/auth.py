@@ -16,7 +16,7 @@ from user import User
 U = TypeVar('User')
 
 
-def _hash_password(plain_password: str) -> bytes:
+def _hash_password(password: str) -> bytes:
     """
     Hashes a password string using bcrypt and returns the hashed password in bytes format.
 
@@ -26,7 +26,7 @@ def _hash_password(plain_password: str) -> bytes:
     Returns:
         bytes: Hashed password in bytes format.
     """
-    encoded_password = plain_password.encode('utf-8')
+    encoded_password = password .encode('utf-8')
     return bcrypt.hashpw(encoded_password, bcrypt.gensalt())
 
 
