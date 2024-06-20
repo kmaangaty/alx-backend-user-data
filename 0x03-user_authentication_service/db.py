@@ -18,7 +18,8 @@ class DB:
     def __init__(self) -> None:
         """Initialize a new DB instance.
 
-        Sets up the database engine and creates all tables.
+        Sets up the database engine and
+         creates all tables.
         """
         self._engine = create_engine("sqlite:///a.db", echo=False)
         Base.metadata.drop_all(self._engine)
@@ -58,15 +59,18 @@ class DB:
         Find a user by attributes.
 
         Args:
-            **kwargs: Arbitrary keyword arguments representing the attributes
+            **kwargs: Arbitrary keyword arguments
+             representing the attributes
                       to match the user.
 
         Returns:
             User: The user matching the given attributes.
 
         Raises:
-            InvalidRequestError: If any of the provided attributes are invalid.
-            NoResultFound: If no user matches the given attributes.
+            InvalidRequestError: If any of the
+            provided attributes are invalid.
+            NoResultFound: If no user matches the
+            given attributes.
         """
         query = self._session.query(User)
         for key, value in kwargs.items():
@@ -84,14 +88,16 @@ class DB:
 
         Args:
             user_id (int): The user's ID.
-            **kwargs: Arbitrary keyword arguments representing the attributes
+            **kwargs: Arbitrary keyword arguments
+             representing the attributes
                       to update and their new values.
 
         Returns:
             None
 
         Raises:
-            ValueError: If the user does not exist or if any of the provided
+            ValueError: If the user does not exist
+             or if any of the provided
                         attributes are invalid.
         """
         try:

@@ -11,16 +11,22 @@ from sqlalchemy import (
 
 Base = declarative_base()
 
+
 class User(Base):
     """
     SQLAlchemy User model representing the 'users' table.
 
     Attributes:
-        id (int): Primary key, unique identifier for each user.
-        email (str): The user's email address. This field is required.
-        hashed_password (str): The user's hashed password. This field is required.
-        session_id (str): Optional session ID for the user's current session.
-        reset_token (str): Optional token for password reset functionality.
+        id (int): Primary key, unique identifier
+         for each user.
+        email (str): The user's email address.
+         This field is required.
+        hashed_password (str): The user's hashed
+         password. This field is required.
+        session_id (str): Optional session ID
+        for the user's current session.
+        reset_token (str): Optional token for
+         password reset functionality.
     """
     __tablename__ = "users"
 

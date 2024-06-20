@@ -31,12 +31,16 @@ def index() -> str:
 @app.route("/users", methods=["POST"], strict_slashes=False)
 def register_user() -> str:
     """
-    Register a new user with the provided email and password.
+    Register a new user with the provided
+    email and password.
 
     Returns:
-        JSON response containing the user's email and a success message.
-        If the email is already registered, returns an error message with a 400 status code.
+        JSON response containing the user's
+        email and a success message.
+        If the email is already registered,
+         returns an error message with a 400 status code.
     """
+
     email = request.form.get("email")
     password = request.form.get("password")
     try:
@@ -50,10 +54,12 @@ def register_user() -> str:
 @app.route("/sessions", methods=["POST"], strict_slashes=False)
 def login() -> str:
     """
-    Log in a user with the provided email and password.
+    Log in a user with the provided
+    email and password.
 
     Returns:
-        JSON response containing the user's email and a success message.
+        JSON response containing the user's
+        email and a success message.
         Sets a session cookie if login is successful.
         If the credentials are invalid, returns a 401 error.
     """
@@ -75,7 +81,8 @@ def logout():
     Log out a user and destroy their session.
 
     Returns:
-        Redirects to the home page if the session is successfully destroyed.
+        Redirects to the home page if the
+         session is successfully destroyed.
         If the session is invalid, returns a 403 error.
     """
     session_id = request.cookies.get("session_id", None)
@@ -89,7 +96,8 @@ def logout():
 @app.route("/profile", methods=["GET"], strict_slashes=False)
 def profile() -> str:
     """
-    Retrieve the user's email based on the session_id in the cookies.
+    Retrieve the user's email based on the
+    session_id in the cookies.
 
     Returns:
         JSON response containing the user's email.
@@ -108,7 +116,8 @@ def get_reset_password_token() -> str:
     Generate a token for resetting a user's password.
 
     Returns:
-        JSON response containing the user's email and the reset token.
+        JSON response containing the user's
+         email and the reset token.
         If the email is invalid, returns a 403 error.
     """
     email = request.form.get("email")
@@ -123,10 +132,12 @@ def get_reset_password_token() -> str:
 @app.route("/reset_password", methods=["PUT"], strict_slashes=False)
 def update_password() -> str:
     """
-    Update a user's password using the provided reset token and new password.
+    Update a user's password using the
+     provided reset token and new password.
 
     Returns:
-        JSON response containing the user's email and a success message.
+        JSON response containing the user's
+        email and a success message.
         If the reset token is invalid, returns a 403 error.
     """
     email = request.form.get("email")
