@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-SQLAlchemy model definition for the 'User' corresponding to the "users" database table.
+SQLAlchemy model definition for the 'User'
+ corresponding to the "users" database table.
 """
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (
