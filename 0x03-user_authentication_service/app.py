@@ -14,6 +14,7 @@ from flask import (
 from auth import Auth
 
 app = Flask(__name__)
+AUTH = Auth()
 
 
 @app.route("/", methods=["GET"], strict_slashes=False)
@@ -134,7 +135,7 @@ def update_password() -> str:
     new_password = request.form.get("new_password")
 
     try:
-        auth_service.update_password(reset_token, new_password)
+        AUTH.update_password(reset_token, new_password)
     except ValueError:
         abort(403)
 
