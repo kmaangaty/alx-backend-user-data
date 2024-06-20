@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Definition of utility functions and Auth class for user authentication and management.
+Definition of utility functions and Auth class
+ for user authentication and management.
 """
 import bcrypt
 from uuid import uuid4
@@ -18,7 +19,8 @@ U = TypeVar('User')
 
 def _hash_password(password: str) -> bytes:
     """
-    Hashes a password string using bcrypt and returns the hashed password in bytes format.
+    Hashes a password string using bcrypt and
+    returns the hashed password in bytes format.
 
     Args:
         plain_password (str): Password in plain string format.
@@ -97,13 +99,15 @@ class Auth:
 
     def create_session(self, email: str) -> Union[None, str]:
         """
-        Create a session ID for an existing user and update the user's session ID attribute.
+        Create a session ID for an existing user
+        and update the user's session ID attribute.
 
         Args:
             email (str): User's email address.
 
         Returns:
-            Union[None, str]: The created session ID, or None if user not found.
+            Union[None, str]: The created session ID,
+             or None if user not found.
         """
         try:
             user_obj = self._db.find_user_by(email=email)
@@ -136,7 +140,8 @@ class Auth:
 
     def destroy_session(self, user_id: int) -> None:
         """
-        Destroy the session for the user with the given ID by setting their session ID to None.
+        Destroy the session for the user with the given
+        ID by setting their session ID to None.
 
         Args:
             user_id (int): User's ID.
@@ -151,7 +156,8 @@ class Auth:
 
     def get_reset_password_token(self, email: str) -> str:
         """
-        Generate a reset token for the user identified by the given email address.
+        Generate a reset token for the
+        user identified by the given email address.
 
         Args:
             email (str): User's email address.
@@ -173,7 +179,8 @@ class Auth:
 
     def update_password(self, reset_token: str, plain_password: str) -> None:
         """
-        Update the user's password using the provided reset token and new password.
+        Update the user's password using the
+         provided reset token and new password.
 
         Args:
             reset_token (str): The reset token for the user.
@@ -191,4 +198,5 @@ class Auth:
             raise ValueError()
 
         hashed_password = _hash_password(plain_password)
-        self._db.update_user(user_obj.id, hashed_password=hashed_password, reset_token=None)
+        self._db.update_user(user_obj.id, hashed_password=hashed_password,
+                             reset_token=None)
