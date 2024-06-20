@@ -4,6 +4,7 @@ Main file for testing the Flask authentication endpoints.
 """
 import requests
 
+
 def register_user(email: str, password: str) -> None:
     """
     Test registration of a user with the given email and password.
@@ -95,7 +96,8 @@ def logout(session_id: str) -> None:
         None
     """
     cookies = {'session_id': session_id}
-    response = requests.delete('http://127.0.0.1:5000/sessions', cookies=cookies)
+    response = requests.delete('http://127.0.0.1:5000/sessions',
+                               cookies=cookies)
     if response.status_code == 302:
         assert response.url == 'http://127.0.0.1:5000/'
     else:
@@ -121,7 +123,8 @@ def get_reset_password_token(email: str) -> str:
 
 def update_password(email: str, reset_token: str, new_password: str) -> None:
     """
-    Test updating the password with the given email, reset_token, and new_password.
+    Test updating the password with the given email,
+     reset_token, and new_password.
 
     Args:
         email (str): The email of the user.
@@ -131,10 +134,12 @@ def update_password(email: str, reset_token: str, new_password: str) -> None:
     Returns:
         None
     """
-    data = {'email': email, 'reset_token': reset_token, 'new_password': new_password}
+    data = {'email': email, 'reset_token': reset_token,
+            'new_password': new_password}
     response = requests.put('http://127.0.0.1:5000/reset_password', data=data)
     if response.status_code == 200:
-        assert response.json() == {"email": email, "message": "Password updated"}
+        assert response.json() == {"email": email,
+                                   "message": "Password updated"}
     else:
         assert response.status_code == 403
 
