@@ -35,7 +35,8 @@ def register_user() -> str:
 
     Returns:
         JSON response containing the user's email and a success message.
-        If the email is already registered, returns an error message with a 400 status code.
+        If the email is already registered,
+         returns an error message with a 400 status code.
     """
     email = request.form.get("email")
     password = request.form.get("password")
