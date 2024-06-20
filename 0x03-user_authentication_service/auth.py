@@ -23,7 +23,7 @@ def _hash_password(password: str) -> bytes:
     returns the hashed password in bytes format.
 
     Args:
-        plain_password (str): Password in plain string format.
+        password (str): Password in plain string format.
 
     Returns:
         bytes: Hashed password in bytes format.
@@ -55,13 +55,13 @@ class Auth:
         """
         self._db = DB()
 
-    def register_user(self, email: str, password: str) -> User:
+    def register_user(self, email: str, plain_password: str) -> User:
         """
         Register a new user and return the User object.
 
         Args:
             email (str): New user's email address.
-            password (str): New user's password.
+            plain_password (str): New user's password.
 
         Returns:
             User: The newly created User object.
@@ -72,18 +72,18 @@ class Auth:
         try:
             self._db.find_user_by(email=email)
         except NoResultFound:
-            hashed_password = _hash_password(password)
+            hashed_password = _hash_password(plain_password)
             user_obj = self._db.add_user(email, hashed_password)
             return user_obj
         raise ValueError(f"User {email} already exists")
 
-    def valid_login(self, email: str, plain_password: str) -> bool:
+    def valid_login(self, email: str, password: str) -> bool:
         """
         Validate a user's login credentials.
 
         Args:
             email (str): User's email address.
-            plain_password (str): User's password.
+            password (str): User's password.
 
         Returns:
             bool: True if the credentials are correct, else False.
@@ -94,7 +94,7 @@ class Auth:
             return False
 
         user_password = user_obj.hashed_password
-        encoded_password = plain_password.encode("utf-8")
+        encoded_password = password.encode("utf-8")
         return bcrypt.checkpw(encoded_password, user_password)
 
     def create_session(self, email: str) -> Union[None, str]:
@@ -177,14 +177,14 @@ class Auth:
         self._db.update_user(user_obj.id, reset_token=reset_token)
         return reset_token
 
-    def update_password(self, reset_token: str, plain_password: str) -> None:
+    def update_password(self, reset_token: str, password: str) -> None:
         """
         Update the user's password using the
          provided reset token and new password.
 
         Args:
             reset_token (str): The reset token for the user.
-            plain_password (str): The new password.
+            password (str): The new password.
 
         Returns:
             None
@@ -197,6 +197,6 @@ class Auth:
         except NoResultFound:
             raise ValueError()
 
-        hashed_password = _hash_password(plain_password)
+        hashed_password = _hash_password(password)
         self._db.update_user(user_obj.id, hashed_password=hashed_password,
                              reset_token=None)
