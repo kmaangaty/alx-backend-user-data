@@ -1,162 +1,145 @@
 #!/usr/bin/env python3
 """
-Definition of _hash_password function
+Flask application for user authentication and management.
 """
-import bcrypt
-from uuid import uuid4
-from sqlalchemy.orm.exc import NoResultFound
-from typing import (
-    TypeVar,
-    Union
+from flask import (
+    Flask,
+    request,
+    jsonify,
+    abort,
+    redirect,
+    url_for
 )
 
-from db import DB
-from user import User
+from auth import Auth
 
-U = TypeVar(User)
+app = Flask(__name__)
+auth_service = Auth()
 
 
-def _hash_password(password: str) -> bytes:
+@app.route("/", methods=["GET"], strict_slashes=False)
+def index() -> str:
     """
-    Hashes a password string and returns it in bytes form
-    Args:
-        password (str): password in string format
+    Endpoint to check if the application is running.
+
+    Returns:
+        JSON response with a welcome message.
     """
-    passwd = password.encode('utf-8')
-    return bcrypt.hashpw(passwd, bcrypt.gensalt())
+    return jsonify({"message": "Bienvenue"})
 
 
-def _generate_uuid() -> str:
+@app.route("/users", methods=["POST"], strict_slashes=False)
+def register_user() -> str:
     """
-    Generate a uuid and return its string representation
+    Register a new user with the provided email and password.
+
+    Returns:
+        JSON response containing the user's email and a success message.
+        If the email is already registered, returns an error message with a 400 status code.
     """
-    return str(uuid4())
+    email = request.form.get("email")
+    password = request.form.get("password")
+    try:
+        user = auth_service.register_user(email, password)
+    except ValueError:
+        return jsonify({"message": "email already registered"}), 400
+
+    return jsonify({"email": email, "message": "user created"})
 
 
-class Auth:
-    """Auth class to interact with the authentication database.
+@app.route("/sessions", methods=["POST"], strict_slashes=False)
+def login() -> str:
     """
+    Log in a user with the provided email and password.
 
-    def __init__(self) -> None:
-        self._db = DB()
+    Returns:
+        JSON response containing the user's email and a success message.
+        Sets a session cookie if login is successful.
+        If the credentials are invalid, returns a 401 error.
+    """
+    email = request.form.get("email")
+    password = request.form.get("password")
 
-    def register_user(self, email: str, password: str) -> User:
-        """
-        Register a new user and return a user object
-        Args:
-            email (str): new user's email address
-            password (str): new user's password
-        Return:
-            if no user with given email exists, return newly created user
-            else raise ValueError
-        """
-        try:
-            self._db.find_user_by(email=email)
-        except NoResultFound:
-            hashed = _hash_password(password)
-            usr = self._db.add_user(email, hashed)
-            return usr
-        raise ValueError(f"User {email} already exists")
+    if not auth_service.valid_login(email, password):
+        abort(401)
 
-    def valid_login(self, email: str, password: str) -> bool:
-        """
-        Validate a user's login credentials and return True if they are correct
-        or False if they are not
-        Args:
-            email (str): user's email address
-            password (str): user's password
-        Return:
-            True if credentials are correct, else False
-        """
-        try:
-            user = self._db.find_user_by(email=email)
-        except NoResultFound:
-            return False
+    session_id = auth_service.create_session(email)
+    response = jsonify({"email": email, "message": "logged in"})
+    response.set_cookie("session_id", session_id)
+    return response
 
-        user_password = user.hashed_password
-        passwd = password.encode("utf-8")
-        return bcrypt.checkpw(passwd, user_password)
 
-    def create_session(self, email: str) -> Union[None, str]:
-        """
-        Create a session_id for an existing user and update the user's
-        session_id attribute
-        Args:
-            email (str): user's email address
-        """
-        try:
-            user = self._db.find_user_by(email=email)
-        except NoResultFound:
-            return None
+@app.route("/sessions", methods=["DELETE"], strict_slashes=False)
+def logout():
+    """
+    Log out a user and destroy their session.
 
-        session_id = _generate_uuid()
-        self._db.update_user(user.id, session_id=session_id)
-        return session_id
+    Returns:
+        Redirects to the home page if the session is successfully destroyed.
+        If the session is invalid, returns a 403 error.
+    """
+    session_id = request.cookies.get("session_id", None)
+    user = auth_service.get_user_from_session_id(session_id)
+    if user is None or session_id is None:
+        abort(403)
+    auth_service.destroy_session(user.id)
+    return redirect("/")
 
-    def get_user_from_session_id(self, session_id: str) -> Union[None, U]:
-        """
-        Takes a session_id and returns the corresponding user, if one exists,
-        else returns None
-        Args:
-            session_id (str): session id for user
-        Return:
-            user object if found, else None
-        """
-        if session_id is None:
-            return None
 
-        try:
-            user = self._db.find_user_by(session_id=session_id)
-        except NoResultFound:
-            return None
+@app.route("/profile", methods=["GET"], strict_slashes=False)
+def profile() -> str:
+    """
+    Retrieve the user's email based on the session_id in the cookies.
 
-        return user
+    Returns:
+        JSON response containing the user's email.
+        If the session is invalid, returns a 403 error.
+    """
+    session_id = request.cookies.get("session_id")
+    user = auth_service.get_user_from_session_id(session_id)
+    if user:
+        return jsonify({"email": user.email}), 200
+    abort(403)
 
-    def destroy_session(self, user_id: int) -> None:
-        """
-        Take a user_id and destroy that user's session and update their
-        session_id attribute to None
-        Args:
-            user_id (int): user's id
-        Return:
-            None
-        """
-        try:
-            self._db.update_user(user_id, session_id=None)
-        except ValueError:
-            return None
-        return None
 
-    def get_reset_password_token(self, email: str) -> str:
-        """
-        Generates a reset_token uuid for a user identified by the given email
-        Args:
-            email (str): user's email address
-        Return:
-            newly generated reset_token for the relevant user
-        """
-        try:
-            user = self._db.find_user_by(email=email)
-        except NoResultFound:
-            raise ValueError
+@app.route("/reset_password", methods=["POST"], strict_slashes=False)
+def get_reset_password_token() -> str:
+    """
+    Generate a token for resetting a user's password.
 
-        reset_token = _generate_uuid()
-        self._db.update_user(user.id, reset_token=reset_token)
-        return reset_token
+    Returns:
+        JSON response containing the user's email and the reset token.
+        If the email is invalid, returns a 403 error.
+    """
+    email = request.form.get("email")
+    try:
+        reset_token = auth_service.get_reset_password_token(email)
+    except ValueError:
+        abort(403)
 
-    def update_password(self, reset_token: str, password: str) -> None:
-        """
-        Updates a user's password
-        Args:
-            reset_token (str): reset_token issued to reset the password
-            password (str): user's new password
-        Return:
-            None
-        """
-        try:
-            user = self._db.find_user_by(reset_token=reset_token)
-        except NoResultFound:
-            raise ValueError()
+    return jsonify({"email": email, "reset_token": reset_token})
 
-        hashed = _hash_password(password)
-        self._db.update_user(user.id, hashed_password=hashed, reset_token=None)
+
+@app.route("/reset_password", methods=["PUT"], strict_slashes=False)
+def update_password() -> str:
+    """
+    Update a user's password using the provided reset token and new password.
+
+    Returns:
+        JSON response containing the user's email and a success message.
+        If the reset token is invalid, returns a 403 error.
+    """
+    email = request.form.get("email")
+    reset_token = request.form.get("reset_token")
+    new_password = request.form.get("new_password")
+
+    try:
+        auth_service.update_password(reset_token, new_password)
+    except ValueError:
+        abort(403)
+
+    return jsonify({"email": email, "message": "Password updated"})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port="5000")
