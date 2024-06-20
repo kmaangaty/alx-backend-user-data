@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Flask app
+Flask application for user authentication and management.
 """
 from flask import (
     Flask,
@@ -20,7 +20,10 @@ auth_service = Auth()
 @app.route("/", methods=["GET"], strict_slashes=False)
 def index() -> str:
     """
-    Return a JSON response with a welcome message
+    Endpoint to check if the application is running.
+
+    Returns:
+        JSON response with a welcome message.
     """
     return jsonify({"message": "Bienvenue"})
 
@@ -28,11 +31,11 @@ def index() -> str:
 @app.route("/users", methods=["POST"], strict_slashes=False)
 def register_user() -> str:
     """
-    Register a new user with the provided
-    email and password.
-    Returns a JSON response with the user's
-     email and a success message,
-    or an error message if the email is already registered.
+    Register a new user with the provided email and password.
+
+    Returns:
+        JSON response containing the user's email and a success message.
+        If the email is already registered, returns an error message with a 400 status code.
     """
     email = request.form.get("email")
     password = request.form.get("password")
@@ -47,11 +50,12 @@ def register_user() -> str:
 @app.route("/sessions", methods=["POST"], strict_slashes=False)
 def login() -> str:
     """
-    Log in a user if the provided credentials
-    are correct, and create a new
-    session for them. Returns a JSON response
-    with the user's email and a
-    success message, or an error if the credentials are invalid.
+    Log in a user with the provided email and password.
+
+    Returns:
+        JSON response containing the user's email and a success message.
+        Sets a session cookie if login is successful.
+        If the credentials are invalid, returns a 401 error.
     """
     email = request.form.get("email")
     password = request.form.get("password")
@@ -68,11 +72,11 @@ def login() -> str:
 @app.route("/sessions", methods=["DELETE"], strict_slashes=False)
 def logout():
     """
-    Log out a logged-in user and destroy their
-     session. Redirects to the
-    home page upon successful logout, or returns
-     a 403 error if the session
-    is invalid.
+    Log out a user and destroy their session.
+
+    Returns:
+        Redirects to the home page if the session is successfully destroyed.
+        If the session is invalid, returns a 403 error.
     """
     session_id = request.cookies.get("session_id", None)
     user = auth_service.get_user_from_session_id(session_id)
@@ -85,11 +89,11 @@ def logout():
 @app.route("/profile", methods=["GET"], strict_slashes=False)
 def profile() -> str:
     """
-    Return a user's email based on the
-     session_id in the received cookies.
-    Returns a JSON response with the user's email,
-     or a 403 error if the
-    session is invalid.
+    Retrieve the user's email based on the session_id in the cookies.
+
+    Returns:
+        JSON response containing the user's email.
+        If the session is invalid, returns a 403 error.
     """
     session_id = request.cookies.get("session_id")
     user = auth_service.get_user_from_session_id(session_id)
@@ -102,10 +106,10 @@ def profile() -> str:
 def get_reset_password_token() -> str:
     """
     Generate a token for resetting a user's password.
-     Returns a JSON response
-    with the user's email and reset token,
-    or a 403 error if the email is
-    invalid.
+
+    Returns:
+        JSON response containing the user's email and the reset token.
+        If the email is invalid, returns a 403 error.
     """
     email = request.form.get("email")
     try:
@@ -119,11 +123,11 @@ def get_reset_password_token() -> str:
 @app.route("/reset_password", methods=["PUT"], strict_slashes=False)
 def update_password() -> str:
     """
-    Update a user's password using the
-     provided reset token and new password.
-    Returns a JSON response with the user's
-     email and a success message,
-    or a 403 error if the reset token is invalid.
+    Update a user's password using the provided reset token and new password.
+
+    Returns:
+        JSON response containing the user's email and a success message.
+        If the reset token is invalid, returns a 403 error.
     """
     email = request.form.get("email")
     reset_token = request.form.get("reset_token")

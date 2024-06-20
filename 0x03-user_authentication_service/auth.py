@@ -1,156 +1,194 @@
 #!/usr/bin/env python3
 """
-Flask application for user authentication and management.
+Definition of utility functions and Auth class for user authentication and management.
 """
-from flask import (
-    Flask,
-    request,
-    jsonify,
-    abort,
-    redirect,
-    url_for
+import bcrypt
+from uuid import uuid4
+from sqlalchemy.orm.exc import NoResultFound
+from typing import (
+    TypeVar,
+    Union
 )
 
-from auth import Auth
+from db import DB
+from user import User
 
-app = Flask(__name__)
-auth_service = Auth()
+U = TypeVar('User')
 
 
-@app.route("/", methods=["GET"], strict_slashes=False)
-def index() -> str:
+def _hash_password(plain_password: str) -> bytes:
     """
-    Endpoint to check if the application is running.
+    Hashes a password string using bcrypt and returns the hashed password in bytes format.
+
+    Args:
+        plain_password (str): Password in plain string format.
 
     Returns:
-        JSON response with a welcome message.
+        bytes: Hashed password in bytes format.
     """
-    return jsonify({"message": "Bienvenue"})
+    encoded_password = plain_password.encode('utf-8')
+    return bcrypt.hashpw(encoded_password, bcrypt.gensalt())
 
 
-@app.route("/users", methods=["POST"], strict_slashes=False)
-def register_user() -> str:
+def _generate_uuid() -> str:
     """
-    Register a new user with the provided
-    email and password.
+    Generates a new UUID and returns its string representation.
 
     Returns:
-        JSON response containing the user's
-        email and a success message.
-        If the email is already registered,
-         returns an error message with a 400 status code.
+        str: A new UUID as a string.
+    """
+    return str(uuid4())
+
+
+class Auth:
+    """
+    Auth class to interact with the user authentication database.
+    Provides methods for user registration, login, session management,
+    password reset, and password update.
     """
 
-    email = request.form.get("email")
-    password = request.form.get("password")
-    try:
-        user = auth_service.register_user(email, password)
-    except ValueError:
-        return jsonify({"message": "email already registered"}), 400
+    def __init__(self) -> None:
+        """
+        Initialize the Auth class by creating a new DB instance.
+        """
+        self._db = DB()
 
-    return jsonify({"email": email, "message": "user created"})
+    def register_user(self, email: str, plain_password: str) -> User:
+        """
+        Register a new user and return the User object.
 
+        Args:
+            email (str): New user's email address.
+            plain_password (str): New user's password.
 
-@app.route("/sessions", methods=["POST"], strict_slashes=False)
-def login() -> str:
-    """
-    Log in a user with the provided
-    email and password.
+        Returns:
+            User: The newly created User object.
 
-    Returns:
-        JSON response containing the user's
-        email and a success message.
-        Sets a session cookie if login is successful.
-        If the credentials are invalid, returns a 401 error.
-    """
-    email = request.form.get("email")
-    password = request.form.get("password")
+        Raises:
+            ValueError: If a user with the given email already exists.
+        """
+        try:
+            self._db.find_user_by(email=email)
+        except NoResultFound:
+            hashed_password = _hash_password(plain_password)
+            user_obj = self._db.add_user(email, hashed_password)
+            return user_obj
+        raise ValueError(f"User {email} already exists")
 
-    if not auth_service.valid_login(email, password):
-        abort(401)
+    def valid_login(self, email: str, plain_password: str) -> bool:
+        """
+        Validate a user's login credentials.
 
-    session_id = auth_service.create_session(email)
-    response = jsonify({"email": email, "message": "logged in"})
-    response.set_cookie("session_id", session_id)
-    return response
+        Args:
+            email (str): User's email address.
+            plain_password (str): User's password.
 
+        Returns:
+            bool: True if the credentials are correct, else False.
+        """
+        try:
+            user_obj = self._db.find_user_by(email=email)
+        except NoResultFound:
+            return False
 
-@app.route("/sessions", methods=["DELETE"], strict_slashes=False)
-def logout():
-    """
-    Log out a user and destroy their session.
+        user_password = user_obj.hashed_password
+        encoded_password = plain_password.encode("utf-8")
+        return bcrypt.checkpw(encoded_password, user_password)
 
-    Returns:
-        Redirects to the home page if the
-         session is successfully destroyed.
-        If the session is invalid, returns a 403 error.
-    """
-    session_id = request.cookies.get("session_id", None)
-    user = auth_service.get_user_from_session_id(session_id)
-    if user is None or session_id is None:
-        abort(403)
-    auth_service.destroy_session(user.id)
-    return redirect("/")
+    def create_session(self, email: str) -> Union[None, str]:
+        """
+        Create a session ID for an existing user and update the user's session ID attribute.
 
+        Args:
+            email (str): User's email address.
 
-@app.route("/profile", methods=["GET"], strict_slashes=False)
-def profile() -> str:
-    """
-    Retrieve the user's email based on the
-    session_id in the cookies.
+        Returns:
+            Union[None, str]: The created session ID, or None if user not found.
+        """
+        try:
+            user_obj = self._db.find_user_by(email=email)
+        except NoResultFound:
+            return None
 
-    Returns:
-        JSON response containing the user's email.
-        If the session is invalid, returns a 403 error.
-    """
-    session_id = request.cookies.get("session_id")
-    user = auth_service.get_user_from_session_id(session_id)
-    if user:
-        return jsonify({"email": user.email}), 200
-    abort(403)
+        session_id = _generate_uuid()
+        self._db.update_user(user_obj.id, session_id=session_id)
+        return session_id
 
+    def get_user_from_session_id(self, session_id: str) -> Union[None, U]:
+        """
+        Retrieve the user corresponding to the given session ID.
 
-@app.route("/reset_password", methods=["POST"], strict_slashes=False)
-def get_reset_password_token() -> str:
-    """
-    Generate a token for resetting a user's password.
+        Args:
+            session_id (str): Session ID.
 
-    Returns:
-        JSON response containing the user's
-         email and the reset token.
-        If the email is invalid, returns a 403 error.
-    """
-    email = request.form.get("email")
-    try:
-        reset_token = auth_service.get_reset_password_token(email)
-    except ValueError:
-        abort(403)
+        Returns:
+            Union[None, U]: The User object if found, else None.
+        """
+        if session_id is None:
+            return None
 
-    return jsonify({"email": email, "reset_token": reset_token})
+        try:
+            user_obj = self._db.find_user_by(session_id=session_id)
+        except NoResultFound:
+            return None
 
+        return user_obj
 
-@app.route("/reset_password", methods=["PUT"], strict_slashes=False)
-def update_password() -> str:
-    """
-    Update a user's password using the
-     provided reset token and new password.
+    def destroy_session(self, user_id: int) -> None:
+        """
+        Destroy the session for the user with the given ID by setting their session ID to None.
 
-    Returns:
-        JSON response containing the user's
-        email and a success message.
-        If the reset token is invalid, returns a 403 error.
-    """
-    email = request.form.get("email")
-    reset_token = request.form.get("reset_token")
-    new_password = request.form.get("new_password")
+        Args:
+            user_id (int): User's ID.
 
-    try:
-        auth_service.update_password(reset_token, new_password)
-    except ValueError:
-        abort(403)
+        Returns:
+            None
+        """
+        try:
+            self._db.update_user(user_id, session_id=None)
+        except ValueError:
+            pass
 
-    return jsonify({"email": email, "message": "Password updated"})
+    def get_reset_password_token(self, email: str) -> str:
+        """
+        Generate a reset token for the user identified by the given email address.
 
+        Args:
+            email (str): User's email address.
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="5000")
+        Returns:
+            str: The generated reset token.
+
+        Raises:
+            ValueError: If no user with the given email is found.
+        """
+        try:
+            user_obj = self._db.find_user_by(email=email)
+        except NoResultFound:
+            raise ValueError
+
+        reset_token = _generate_uuid()
+        self._db.update_user(user_obj.id, reset_token=reset_token)
+        return reset_token
+
+    def update_password(self, reset_token: str, plain_password: str) -> None:
+        """
+        Update the user's password using the provided reset token and new password.
+
+        Args:
+            reset_token (str): The reset token for the user.
+            plain_password (str): The new password.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If the reset token is invalid or user not found.
+        """
+        try:
+            user_obj = self._db.find_user_by(reset_token=reset_token)
+        except NoResultFound:
+            raise ValueError()
+
+        hashed_password = _hash_password(plain_password)
+        self._db.update_user(user_obj.id, hashed_password=hashed_password, reset_token=None)
